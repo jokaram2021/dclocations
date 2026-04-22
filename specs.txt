@@ -1,0 +1,353 @@
+# DC Universe Locations specs
+
+## Overview / Purpose
+The DC Universe Locations website allows users to browse, search, filter, and view important fictional locations from the DC universe.
+
+---
+
+
+- Home page
+- Navigation bar
+- User registration
+- User login and logout
+- Browse all locations
+- Search locations by name
+- Filter locations by category
+- View location details
+- Save and remove favorite locations
+- View a favorites page
+- Admin create/edit/delete location pages
+- Error states for invalid input, empty results, unauthorized access, and failed data loading
+
+
+- Password reset
+- Email verification
+- Multi-factor authentication
+- User comments or reviews
+- Real-time chat
+- External map integration
+- Comic issue database
+- Character battle or ranking systems
+
+---
+
+
+A guest user can:
+- View the home page
+- Browse locations
+- Search and filter locations
+- View location details
+- Access login and registration pages
+
+A guest user cannot:
+- Save favorites
+- Create, edit, or delete locations
+- Access admin-only pages
+
+
+A registered user can:
+- Perform all guest actions
+- Save a location to favorites
+- Remove a location from favorites
+- View their favorites page
+- Log out
+
+
+An admin user can:
+- Perform all registered user actions
+- Create a location
+- Edit a location
+- Delete a location
+
+---
+
+Website functions
+
+
+Provide an introduction to the application and allow users to begin browsing the site.
+
+
+1. The system should display the website title: DC Universe Locations.
+2. The system should display a short description of the website's purpose.
+3. The system should display a navigation bar.
+4. The system should provide a visible way to navigate to the locations page.
+5. The system may display featured or highlighted locations.
+
+
+1. If featured locations fail to load, the page shall still render the homepage shell.
+2. If featured data is unavailable, the system shall display a fallback message.
+
+---
+
+
+Allow users to move between major pages of the website.
+
+
+1. The navigation bar shall be visible on every main page.
+2. The navigation bar shall include links to Home and Browse Locations.
+3. If the user is not logged in, the navigation bar shall include Login and Register links.
+4. If the user is logged in, the navigation bar shall include Favorites and Logout.
+5. If the user is an admin, the navigation bar shall include access to add a new location.
+
+
+1. If the current user role cannot be determined, the system shall default to guest-visible navigation only.
+
+---
+
+
+Allow a new user to create an account.
+
+
+1. The system shall provide a registration form.
+2. The registration form shall include username, email, and password fields.
+3. The system shall require all required fields before submission.
+4. The system shall validate that the email format is valid.
+5. The system shall submit valid registration data to the backend API.
+6. If registration succeeds, the system shall redirect the user to the login page or automatically log the user in.
+7. The system shall display a success message after successful registration if applicable.
+
+
+1. If required fields are blank, the system shall display validation messages.
+2. If the email already exists, the system shall display an error message.
+3. If the backend request fails, the system shall display a registration failure message.
+4. Password input shall not be displayed in plain text.
+
+---
+
+
+Allow a registered user to authenticate and access protected website features.
+
+#
+1. The system shall provide login fields for email or username and password.
+2. The system shall require both fields before submission.
+3. The system shall submit the credentials to the authentication API.
+4. If credentials are valid, the system shall create an authenticated session or store the returned token as designed.
+5. If login succeeds, the system shall redirect the user to the home page or locations page.
+6. The system shall update visible navigation after login.
+
+#### Error / Edge Cases
+1. If either field is blank, the system shall display validation errors.
+2. If credentials are invalid, the system shall display an error message.
+3. If the authentication service is unavailable, the system shall display a failure message.
+4. Password input shall not be displayed in plain text.
+
+---
+
+### Logout
+#### Purpose
+Allow an authenticated user to end their session.
+
+#### Functional Requirements
+1. The system shall provide a logout action for authenticated users.
+2. The system shall clear the user's session or authentication token.
+3. After logout, the system shall redirect the user to the home page.
+4. After logout, protected pages shall no longer be accessible without re-authentication.
+
+#### Error / Edge Cases
+1. If logout fails on the server side, the client shall still clear local session state if possible.
+2. If the user is already logged out, the system shall not crash and shall treat the action safely.
+
+---
+
+### Browse Locations Page
+#### Purpose
+Allow users to view a list of DC universe locations.
+
+#### Functional Requirements
+1. The system shall display a list of locations retrieved from the backend API.
+2. Each location entry shall display at minimum:
+   - Name
+   - Category
+   - Short description or summary
+3. Each location entry shall provide a way to open the detail page.
+4. The page shall support browsing by guests and logged-in users.
+
+#### Error / Edge Cases
+1. If no locations are returned, the system shall display an empty-state message.
+2. If the API request fails, the system shall display an error message.
+3. If location data is partially missing, the system shall render available fields without crashing.
+
+---
+
+### Search Locations
+#### Purpose
+Allow users to search for a specific DC universe location by name.
+
+#### Functional Requirements
+1. The system shall provide a search input on the browse page.
+2. The system shall allow users to enter text to search location names.
+3. The system shall display only matching results after search is applied.
+4. The system shall allow users to clear the search and return to the full list.
+
+#### Error / Edge Cases
+1. If the search query returns no matches, the system shall display a no-results message.
+2. If the search service fails, the system shall display an error message.
+3. The system shall handle blank search input without crashing.
+
+---
+
+### Filter Locations by Category
+#### Purpose
+Allow users to narrow the list of locations by type.
+
+#### Functional Requirements
+1. The system shall provide a category filter on the browse page.
+2. The system shall support filtering by available categories.
+3. The system shall update displayed results to match the selected category.
+4. The system shall allow the user to clear the selected filter.
+
+#### Error / Edge Cases
+1. If no results match the selected category, the system shall display an empty-state message.
+2. If category metadata fails to load, the system shall display a fallback message or hide the filter safely.
+
+---
+
+### Location Detail Page
+#### Purpose
+Allow users to view full information about a single location.
+
+#### Functional Requirements
+1. The system shall display the selected location's name.
+2. The system shall display the selected location's category.
+3. The system shall display a full description.
+4. The system shall display additional metadata when available, such as:
+   - Associated hero or faction
+   - First appearance
+   - Universe region
+   - Image
+5. The page shall provide a favorite action for authenticated users.
+6. The page shall provide edit/delete options only for admin users.
+
+#### Error / Edge Cases
+1. If the location ID does not exist, the system shall display a not-found page or message.
+2. If the detail request fails, the system shall display an error message.
+3. If optional fields are missing, the page shall still render required data.
+
+---
+
+### Favorites Page
+#### Purpose
+Allow a registered user to view saved favorite locations.
+
+#### Functional Requirements
+1. The system shall provide a Favorites page for authenticated users.
+2. The system shall display all locations favorited by the current user.
+3. The system shall allow the user to remove a favorite from this page.
+4. Each favorite item shall link to the corresponding detail page.
+
+#### Error / Edge Cases
+1. If the user has no favorites, the system shall display an empty-state message.
+2. If the favorites request fails, the system shall display an error message.
+3. If an unauthenticated user attempts to access the page, the system shall redirect to login or show unauthorized access.
+
+---
+
+### Add Favorite / Remove Favorite
+#### Purpose
+Allow a registered user to manage favorite locations.
+
+#### Functional Requirements
+1. The system shall allow an authenticated user to add a location to favorites.
+2. The system shall allow an authenticated user to remove a location from favorites.
+3. The favorite state shall be visually reflected on the UI.
+4. The system shall prevent duplicate favorite entries for the same user and location.
+
+#### Error / Edge Cases
+1. If an unauthenticated user attempts to favorite a location, the system shall redirect to login or show an authentication prompt.
+2. If the favorite action fails, the system shall display an error message.
+3. If a duplicate favorite is attempted, the system shall not create a second copy.
+
+---
+
+### Add Location Page
+
+Allow an admin to create a new location entry.
+
+#### Functional Requirements
+1. The system shall provide a form for adding a new location.
+2. The form shall include required fields such as name, category, and description.
+3. The system shall validate required fields before submission.
+4. The system shall submit valid form data to the backend API.
+5. If successful, the system shall redirect to the new location detail page or locations list.
+6. The system shall restrict this page to admin users.
+
+#### Error / Edge Cases
+1. If required fields are missing, the system shall display validation errors.
+2. If an unauthorized user attempts to access the page, the system shall deny access.
+3. If the API request fails, the system shall display an error message.
+
+---
+
+### Edit Location Page 
+#### Purpose
+Allow an admin to update an existing location.
+
+#### Functional Requirements
+1. The system shall prefill the edit form with existing location data.
+2. The system shall allow the admin to modify editable fields.
+3. The system shall validate required fields before submission.
+4. The system shall submit updates to the backend API.
+5. If successful, the system shall redirect to the updated location detail page.
+6. The system shall restrict this page to admin users.
+
+#### Error / Edge Cases
+1. If the location does not exist, the system shall display a not-found message.
+2. If an unauthorized user attempts to access the page, the system shall deny access.
+3. If update submission fails, the system shall display an error message.
+
+---
+
+#### Functional Requirements
+1. The system shall allow an admin to initiate a delete action from an admin-visible control.
+2. The system shall present a confirmation step before deletion.
+3. If confirmed, the system shall submit the delete request to the backend API.
+4. If deletion succeeds, the system shall redirect to the locations list page.
+5. The system shall restrict delete functionality to admin users.
+
+Error and Edge Cases
+1. If an unauthorized user attempts delete access, the system shall deny access.
+2. If the location no longer exists, the system shall display a not-found message.
+3. If deletion fails, the system shall display an error message.
+
+---
+Unauthorized / Forbidden State
+#### Purpose
+Prevent users from accessing protected pages or actions without sufficient permissions.
+
+Functional Requirements
+1. The system shall block guests from accessing authenticated-only pages.
+2. The system shall block non-admin users from accessing admin-only pages.
+3. The system shall display an appropriate unauthorized or forbidden message.
+4. The system shall provide navigation back to a safe page.
+
+---
+
+---
+
+## 5. Functional Rules Summary
+1. The website shall support guest, registered, and admin user experiences.
+2. The website shall consume backend APIs for data and authentication.
+3. The website shall support search and category filtering for locations.
+4. The website shall support favorites for authenticated users.
+5. The website shall support create, edit, and delete operations for admin users.
+6. The website shall provide visible handling for validation errors, empty states, unauthorized access, and API failures.
+
+---
+
+## 6. Non Functional Requirements
+1. The website shall use a responsive layout suitable for desktop and mobile screen sizes.
+2. Main pages should load in a reasonable amount of time under normal classroom/demo conditions.
+4. Forms can provide clear validation feedback.
+5. The website will not expose passwords in plain text.
+6. The UI will remain usable even if optional data fields are missing.
+7. Error states will be visible and understandable to the user.
+8. Navigation will remain consistent across pages.
+9. The website will be structured in a way that supports testing and future extension.
+
+---
+
+## 7. Dependencies / External Interfaces
+1. The website depends on the backend authentication API.
+2. The website depends on the backend locations API.
+3. The website depends on the backend favorites API.
+4. The website shall communicate with APIs using HTTP requests and JSON responses.
