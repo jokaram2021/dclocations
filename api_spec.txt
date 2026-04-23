@@ -1,0 +1,33 @@
+API Function Specs
+
+
+
+ Scope
+
+
+- User registration
+- User login
+- Location retrieval 
+- Favorites management
+
+ Excluded
+- Password reset
+- Email verification
+- External APIs
+- Real time updates
+
+---
+
+authentication
+
+The API will use token based authentication.
+
+1. User submits credentials to login endpoint
+2. API validates credentials
+3. API returns a token
+4. Client includes token in future requests
+
+if unauthorized access
+- Requests without valid token return error
+- Admin only endpoints require admin role
+
