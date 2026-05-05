@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "uGwkDvVO5Po=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\karam\\OneDrive\\Documents\\CPSC\\dclocations\\DcLocations.Api\\DcLocations.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\karam\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.7\\microsoft.aspnetcore.openapi.10.0.7.nupkg.sha512",
+    "C:\\Users\\karam\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512",
+    "C:\\Users\\karam\\.nuget\\packages\\mysqlconnector\\2.5.0\\mysqlconnector.2.5.0.nupkg.sha512"
+  ],
+  "logs": []
+}
