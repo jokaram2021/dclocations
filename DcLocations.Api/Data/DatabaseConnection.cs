@@ -1,4 +1,4 @@
-using MySqlConnector.MySql;
+using MySqlConnector;
 
 namespace DcLocations.Api.Data
 {

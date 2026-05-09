@@ -1,7 +1,7 @@
 using DcLocations.Api.Data;
 using DcLocations.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector.MySql;
+using MySqlConnector;
 
 namespace DcLocations.Api.Controllers
 {

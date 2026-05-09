@@ -8,7 +8,8 @@
     ".NETCoreApp,Version=v10.0": {
       "DcLocations.Api/1.0.0": {
         "dependencies": {
-          "Microsoft.AspNetCore.OpenApi": "10.0.7"
+          "Microsoft.AspNetCore.OpenApi": "10.0.7",
+          "MySqlConnector": "2.5.0"
         },
         "runtime": {
           "DcLocations.Api.dll": {}
@@ -30,6 +31,14 @@
           "lib/net8.0/Microsoft.OpenApi.dll": {
             "assemblyVersion": "2.0.0.0",
             "fileVersion": "2.0.0.0"
+          }
+        }
+      },
+      "MySqlConnector/2.5.0": {
+        "runtime": {
+          "lib/net10.0/MySqlConnector.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.5.0.0"
           }
         }
       }
@@ -54,6 +63,13 @@
       "sha512": "sha512-GGYLfzV/G/ct80OZ45JxnWP7NvMX1BCugn/lX7TH5o0lcVaviavsLMTxmFV2AybXWjbi3h6FF1vgZiTK6PXndw==",
       "path": "microsoft.openapi/2.0.0",
       "hashPath": "microsoft.openapi.2.0.0.nupkg.sha512"
+    },
+    "MySqlConnector/2.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hoAwfHHF8DlRRqwHOhN3u1KLi+XbX/4LPS7Anfa+SYC97vRyIfdEOEEfj1L50q01Ik8aDNvmDrNmu/VPFiAiaQ==",
+      "path": "mysqlconnector/2.5.0",
+      "hashPath": "mysqlconnector.2.5.0.nupkg.sha512"
     }
   }
 }
