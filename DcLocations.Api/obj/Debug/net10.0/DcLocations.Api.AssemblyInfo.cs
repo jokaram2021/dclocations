@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DcLocations.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+375cbf92fc0b41a59cf5ad45e7c423694e36c0c3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9d8d974d81afe8b974ea4f9acd939403aeb5e43")]
 [assembly: System.Reflection.AssemblyProductAttribute("DcLocations.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DcLocations.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
