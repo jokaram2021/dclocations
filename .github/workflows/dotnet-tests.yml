@@ -15,10 +15,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: CPSC
-
     steps:
 
       - name: Checkout Repository
@@ -29,11 +25,18 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Restore Dependencies
+      - name: Restore API
         run: dotnet restore
+        working-directory: DcLocations.Api
 
-      - name: Build Project
+      - name: Build API
         run: dotnet build --no-restore
+        working-directory: DcLocations.Api
+
+      - name: Restore Tests
+        run: dotnet restore
+        working-directory: DcLocations.Tests
 
       - name: Run Tests
         run: dotnet test --no-build
+        working-directory: DcLocations.Tests
