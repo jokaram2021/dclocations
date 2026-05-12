@@ -8,8 +8,10 @@ namespace DcLocations.Api.Data
 
         public DatabaseConnection(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Database connection string is missing.");
+            _connectionString =
+                configuration.GetConnectionString(
+                    "DefaultConnection"
+                )!;
         }
 
         public MySqlConnection CreateConnection()

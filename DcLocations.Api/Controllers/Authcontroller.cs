@@ -2,6 +2,10 @@ using DcLocations.Api.Data;
 using DcLocations.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace DcLocations.Api.Controllers
 {
@@ -9,101 +13,56 @@ namespace DcLocations.Api.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly DatabaseConnection _databaseConnection;
+        private readonly DatabaseConnection _database;
 
-        public AuthController(DatabaseConnection databaseConnection)
+        private readonly IConfiguration _configuration;
+
+        public AuthController(
+            DatabaseConnection database,
+            IConfiguration configuration
+        )
         {
-            _databaseConnection = databaseConnection;
+            _database = database;
+
+            _configuration = configuration;
         }
 
-        // REGISTER
         [HttpPost("register")]
         public async Task<IActionResult> Register(User user)
         {
             try
             {
-                using MySqlConnection connection =
-                    _databaseConnection.CreateConnection();
+                using var connection =
+                    _database.CreateConnection();
 
                 await connection.OpenAsync();
 
-                // CHECK EMAIL
-                string emailQuery =
-                    "SELECT COUNT(*) FROM users WHERE email = @email";
-
-                using MySqlCommand emailCommand =
-                    new MySqlCommand(emailQuery, connection);
-
-                emailCommand.Parameters.AddWithValue(
-                    "@email",
-                    user.Email
-                );
-
-                int existingEmails =
-                    Convert.ToInt32(
-                        await emailCommand.ExecuteScalarAsync()
-                    );
-
-                if (existingEmails > 0)
-                {
-                    return BadRequest(new
-                    {
-                        error = "Email already exists"
-                    });
-                }
-
-                // CHECK USERNAME
-                string usernameQuery =
-                    "SELECT COUNT(*) FROM users WHERE username = @username";
-
-                using MySqlCommand usernameCommand =
-                    new MySqlCommand(usernameQuery, connection);
-
-                usernameCommand.Parameters.AddWithValue(
-                    "@username",
-                    user.Username
-                );
-
-                int existingUsers =
-                    Convert.ToInt32(
-                        await usernameCommand.ExecuteScalarAsync()
-                    );
-
-                if (existingUsers > 0)
-                {
-                    return BadRequest(new
-                    {
-                        error = "Username already exists"
-                    });
-                }
-
-                // INSERT USER
-                string insertQuery = @"
+                var query = @"
                     INSERT INTO users
-                    (username, email, password_hash)
+                    (username, email, password_hash, role)
                     VALUES
-                    (@username, @email, @password_hash)
+                    (@username, @email, @password, 'User')
                 ";
 
-                using MySqlCommand insertCommand =
-                    new MySqlCommand(insertQuery, connection);
+                using var command =
+                    new MySqlCommand(query, connection);
 
-                insertCommand.Parameters.AddWithValue(
+                command.Parameters.AddWithValue(
                     "@username",
                     user.Username
                 );
 
-                insertCommand.Parameters.AddWithValue(
+                command.Parameters.AddWithValue(
                     "@email",
                     user.Email
                 );
 
-                insertCommand.Parameters.AddWithValue(
-                    "@password_hash",
+                command.Parameters.AddWithValue(
+                    "@password",
                     user.Password
                 );
 
-                await insertCommand.ExecuteNonQueryAsync();
+                await command.ExecuteNonQueryAsync();
 
                 return Ok(new
                 {
@@ -120,25 +79,24 @@ namespace DcLocations.Api.Controllers
             }
         }
 
-        // LOGIN
         [HttpPost("login")]
         public async Task<IActionResult> Login(User user)
         {
             try
             {
-                using MySqlConnection connection =
-                    _databaseConnection.CreateConnection();
+                using var connection =
+                    _database.CreateConnection();
 
                 await connection.OpenAsync();
 
-                string query = @"
+                var query = @"
                     SELECT *
                     FROM users
                     WHERE email = @email
-                    AND password_hash = @password_hash
+                    AND password_hash = @password
                 ";
 
-                using MySqlCommand command =
+                using var command =
                     new MySqlCommand(query, connection);
 
                 command.Parameters.AddWithValue(
@@ -147,24 +105,29 @@ namespace DcLocations.Api.Controllers
                 );
 
                 command.Parameters.AddWithValue(
-                    "@password_hash",
+                    "@password",
                     user.Password
                 );
 
-                using MySqlDataReader reader =
+                using var reader =
                     await command.ExecuteReaderAsync();
 
-                if (!await reader.ReadAsync())
+                if (await reader.ReadAsync())
                 {
-                    return Unauthorized(new
+                    var token =
+                        GenerateJwtToken(user.Email!);
+
+                    return Ok(new
                     {
-                        error = "Invalid email or password"
+                        message = "Login successful",
+                        token = token,
+                        email = user.Email
                     });
                 }
 
-                return Ok(new
+                return Unauthorized(new
                 {
-                    message = "Login successful"
+                    error = "Invalid credentials"
                 });
             }
             catch (Exception ex)
@@ -175,6 +138,38 @@ namespace DcLocations.Api.Controllers
                     details = ex.Message
                 });
             }
+        }
+
+        private string GenerateJwtToken(string email)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Email, email)
+            };
+
+            var key =
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(
+                        _configuration["Jwt:Key"]!
+                    )
+                );
+
+            var credentials =
+                new SigningCredentials(
+                    key,
+                    SecurityAlgorithms.HmacSha256
+                );
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddHours(2),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler()
+                .WriteToken(token);
         }
     }
 }

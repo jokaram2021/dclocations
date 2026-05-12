@@ -1,4 +1,6 @@
 using DcLocations.Api.Data;
+using DcLocations.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 
@@ -6,84 +8,123 @@ namespace DcLocations.Api.Controllers
 {
     [ApiController]
     [Route("api/favorites")]
+    [Authorize]
     public class FavoritesController : ControllerBase
     {
-        private readonly DatabaseConnection _databaseConnection;
+        private readonly DatabaseConnection _database;
 
-        public FavoritesController(DatabaseConnection databaseConnection)
+        public FavoritesController(DatabaseConnection database)
         {
-            _databaseConnection = databaseConnection;
+            _database = database;
         }
 
-        // ADD FAVORITE
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetFavorites(int userId)
+        {
+            try
+            {
+                using var connection =
+                    _database.CreateConnection();
+
+                await connection.OpenAsync();
+
+                var query = @"
+                    SELECT l.*
+                    FROM favorites f
+                    JOIN locations l
+                        ON f.location_id = l.id
+                    WHERE f.user_id = @userId
+                ";
+
+                using var command =
+                    new MySqlCommand(query, connection);
+
+                command.Parameters.AddWithValue(
+                    "@userId",
+                    userId
+                );
+
+                using var reader =
+                    await command.ExecuteReaderAsync();
+
+                var favorites =
+                    new List<Location>();
+
+                while (await reader.ReadAsync())
+                {
+                    favorites.Add(new Location
+                    {
+                        Id =
+                            reader.GetInt32("id"),
+
+                        Name =
+                            reader.GetString("name"),
+
+                        Category =
+                            reader.GetString("category"),
+
+                        Description =
+                            reader.GetString("description"),
+
+                        AssociatedHero =
+                            reader.GetString("associated_hero"),
+
+                        UniverseRegion =
+                            reader.GetString("universe_region"),
+
+                        FirstAppearance =
+                            reader.GetString("first_appearance"),
+
+                        ImageUrl =
+                            reader.GetString("image_url")
+                    });
+                }
+
+                return Ok(favorites);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Failed to load favorites",
+                    details = ex.Message
+                });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddFavorite(
-            [FromBody] FavoriteRequest request
+            [FromBody] Favorite favorite
         )
         {
             try
             {
-                using MySqlConnection connection =
-                    _databaseConnection.CreateConnection();
+                using var connection =
+                    _database.CreateConnection();
 
                 await connection.OpenAsync();
 
-                // CHECK DUPLICATE
-                string checkQuery = @"
-                    SELECT COUNT(*)
-                    FROM favorites
-                    WHERE user_id = @user_id
-                    AND location_id = @location_id
-                ";
-
-                using MySqlCommand checkCommand =
-                    new MySqlCommand(checkQuery, connection);
-
-                checkCommand.Parameters.AddWithValue(
-                    "@user_id",
-                    request.UserId
-                );
-
-                checkCommand.Parameters.AddWithValue(
-                    "@location_id",
-                    request.LocationId
-                );
-
-                int existing =
-                    Convert.ToInt32(
-                        await checkCommand.ExecuteScalarAsync()
-                    );
-
-                if (existing > 0)
-                {
-                    return BadRequest(new
-                    {
-                        error = "Favorite already exists"
-                    });
-                }
-
-                // INSERT FAVORITE
-                string insertQuery = @"
+                var query = @"
                     INSERT INTO favorites
                     (user_id, location_id)
                     VALUES
-                    (@user_id, @location_id)
+                    (@userId, @locationId)
                 ";
 
-                using MySqlCommand insertCommand =
-                    new MySqlCommand(insertQuery, connection);
+                using var command =
+                    new MySqlCommand(query, connection);
 
-                insertCommand.Parameters.AddWithValue(
-                    "@user_id",
-                    request.UserId
+                command.Parameters.AddWithValue(
+                    "@userId",
+                    favorite.UserId
                 );
 
-                insertCommand.Parameters.AddWithValue(
-                    "@location_id",
-                    request.LocationId
+                command.Parameters.AddWithValue(
+                    "@locationId",
+                    favorite.LocationId
                 );
 
-                await insertCommand.ExecuteNonQueryAsync();
+                await command.ExecuteNonQueryAsync();
 
                 return Ok(new
                 {
@@ -100,95 +141,36 @@ namespace DcLocations.Api.Controllers
             }
         }
 
-        // GET USER FAVORITES
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetFavorites(int userId)
-        {
-            try
-            {
-                List<object> favorites = new();
-
-                using MySqlConnection connection =
-                    _databaseConnection.CreateConnection();
-
-                await connection.OpenAsync();
-
-                string query = @"
-                    SELECT
-                        l.id,
-                        l.name,
-                        l.category,
-                        l.description
-                    FROM favorites f
-                    JOIN locations l
-                        ON f.location_id = l.id
-                    WHERE f.user_id = @user_id
-                ";
-
-                using MySqlCommand command =
-                    new MySqlCommand(query, connection);
-
-                command.Parameters.AddWithValue(
-                    "@user_id",
-                    userId
-                );
-
-                using MySqlDataReader reader =
-                    await command.ExecuteReaderAsync();
-
-                while (await reader.ReadAsync())
-                {
-                    favorites.Add(new
-                    {
-                        Id = reader.GetInt32("id"),
-                        Name = reader.GetString("name"),
-                        Category = reader.GetString("category"),
-                        Description = reader.GetString("description")
-                    });
-                }
-
-                return Ok(favorites);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    error = "Failed to load favorites",
-                    details = ex.Message
-                });
-            }
-        }
-
-        // DELETE FAVORITE
         [HttpDelete]
-        public async Task<IActionResult> DeleteFavorite(
-            [FromBody] FavoriteRequest request
+        public async Task<IActionResult> RemoveFavorite(
+            int userId,
+            int locationId
         )
         {
             try
             {
-                using MySqlConnection connection =
-                    _databaseConnection.CreateConnection();
+                using var connection =
+                    _database.CreateConnection();
 
                 await connection.OpenAsync();
 
-                string query = @"
+                var query = @"
                     DELETE FROM favorites
-                    WHERE user_id = @user_id
-                    AND location_id = @location_id
+                    WHERE user_id = @userId
+                    AND location_id = @locationId
                 ";
 
-                using MySqlCommand command =
+                using var command =
                     new MySqlCommand(query, connection);
 
                 command.Parameters.AddWithValue(
-                    "@user_id",
-                    request.UserId
+                    "@userId",
+                    userId
                 );
 
                 command.Parameters.AddWithValue(
-                    "@location_id",
-                    request.LocationId
+                    "@locationId",
+                    locationId
                 );
 
                 await command.ExecuteNonQueryAsync();
@@ -209,8 +191,7 @@ namespace DcLocations.Api.Controllers
         }
     }
 
-    // REQUEST MODEL
-    public class FavoriteRequest
+    public class Favorite
     {
         public int UserId { get; set; }
 

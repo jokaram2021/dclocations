@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>Favorites</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    />
+
+    <style>
+
+        body
+        {
+            background:
+                linear-gradient(
+                    rgba(5,10,20,0.94),
+                    rgba(5,10,20,0.96)
+                ),
+                url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1600&auto=format&fit=crop');
+
+            background-size: cover;
+
+            background-attachment: fixed;
+
+            color: white;
+
+            min-height: 100vh;
+        }
+
+        .navbar
+        {
+            background:
+                rgba(0,0,0,0.75);
+        }
+
+        .favorites-title
+        {
+            font-size: 3rem;
+
+            font-weight: bold;
+
+            margin-top: 40px;
+
+            margin-bottom: 40px;
+        }
+
+        .favorite-card
+        {
+            background:
+                rgba(255,255,255,0.08);
+
+            border:
+                1px solid rgba(255,255,255,0.1);
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            backdrop-filter: blur(10px);
+
+            transition: 0.3s ease;
+        }
+
+        .favorite-card:hover
+        {
+            transform: translateY(-5px);
+
+            box-shadow:
+                0 0 25px rgba(59,130,246,0.35);
+        }
+
+        .favorite-image
+        {
+            width: 100%;
+
+            height: 220px;
+
+            object-fit: cover;
+        }
+
+        .favorite-body
+        {
+            padding: 25px;
+        }
+
+        .remove-btn
+        {
+            width: 100%;
+
+            padding: 12px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #dc2626,
+                    #ef4444
+                );
+
+            color: white;
+
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-dark navbar-expand-lg">
+
+        <div class="container">
+
+            <a
+                href="locations.html"
+                class="navbar-brand fw-bold"
+            >
+                DC Universe
+            </a>
+
+            <div class="d-flex gap-2">
+
+                <a
+                    href="locations.html"
+                    class="btn btn-outline-light"
+                >
+                    Locations
+                </a>
+
+                <button
+                    class="btn btn-danger"
+                    onclick="logout()"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <div class="container">
+
+        <h1 class="favorites-title">
+            My Favorites
+        </h1>
+
+        <div
+            class="row g-4"
+            id="favoritesContainer"
+        ></div>
+
+    </div>
+
+    <script>
+
+        // PROTECT PAGE
+        if (!localStorage.getItem("token"))
+        {
+            window.location.href =
+                "login.html";
+        }
+
+        async function loadFavorites()
+        {
+            try
+            {
+                const response =
+                    await fetch(
+                        "http://localhost:5153/api/favorites/1",
+                        {
+                            headers:
+                            {
+                                "Authorization":
+                                    `Bearer ${localStorage.getItem("token")}`
+                            }
+                        }
+                    );
+
+                if (!response.ok)
+                {
+                    throw new Error(
+                        "Unauthorized"
+                    );
+                }
+
+                const favorites =
+                    await response.json();
+
+                const container =
+                    document.getElementById(
+                        "favoritesContainer"
+                    );
+
+                container.innerHTML = "";
+
+                favorites.forEach(location =>
+                {
+                    container.innerHTML +=
+                    `
+                        <div class="col-lg-4">
+
+                            <div class="favorite-card">
+
+                                <img
+                                    src="${location.imageUrl}"
+                                    class="favorite-image"
+                                />
+
+                                <div class="favorite-body">
+
+                                    <span class="badge bg-primary mb-2">
+                                        ${location.category}
+                                    </span>
+
+                                    <h3>
+                                        ${location.name}
+                                    </h3>
+
+                                    <p>
+                                        ${location.description}
+                                    </p>
+
+                                    <button
+                                        class="remove-btn"
+                                        onclick="removeFavorite(${location.id})"
+                                    >
+                                        Remove Favorite
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    `;
+                });
+            }
+            catch (error)
+            {
+                console.error(error);
+            }
+        }
+
+        async function removeFavorite(locationId)
+        {
+            try
+            {
+                await fetch(
+                    `http://localhost:5153/api/favorites?userId=1&locationId=${locationId}`,
+                    {
+                        method: "DELETE",
+
+                        headers:
+                        {
+                            "Authorization":
+                                `Bearer ${localStorage.getItem("token")}`
+                        }
+                    }
+                );
+
+                loadFavorites();
+            }
+            catch (error)
+            {
+                console.error(error);
+            }
+        }
+
+        function logout()
+        {
+            localStorage.clear();
+
+            window.location.href =
+                "login.html";
+        }
+
+        loadFavorites();
+
+    </script>
+
+</body>
+</html>

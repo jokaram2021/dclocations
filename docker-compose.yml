@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+
+  dc-api:
+    build:
+      context: ./DcLocations.Api
+      dockerfile: Dockerfile
+
+    container_name: dc_locations_api
+
+    ports:
+      - "5153:8080"
+
+    depends_on:
+      - mysql-db
+
+    environment:
+      ConnectionStrings__DefaultConnection: "server=mysql-db;port=3306;database=dc_universe_locations;user=root;password=rootpassword"
+
+  mysql-db:
+    image: mysql:8.0
+
+    container_name: dc_locations_mysql
+
+    restart: always
+
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: dc_universe_locations
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./DcLocations.Api/database.sql:/docker-entrypoint-initdb.d/database.sql
+
+volumes:
+  mysql_data:
