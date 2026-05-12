@@ -63,14 +63,59 @@ VALUES
 ('batfan', 'batfan@dc.com', 'password123', 'User');
 
 
-INSERT INTO locations (name, category, description, associated_hero, universe_region, first_appearance, image_url)
+INSERT INTO locations
+(name, category, description, associated_hero, universe_region, first_appearance, image_url)
 VALUES
-('Gotham City', 'City', 'A dark and crime-filled city protected by Batman.', 'Batman', 'Earth', 'Detective Comics #27', '/images/gotham.png'),
-('Metropolis', 'City', 'The home city of Superman.', 'Superman', 'Earth', 'Action Comics #1', '/images/metropolis.png'),
-('Themyscira', 'Island', 'Hidden homeland of the Amazons.', 'Wonder Woman', 'Earth', 'All Star Comics #8', '/images/themyscira.png'),
-('Atlantis', 'Kingdom', 'An underwater kingdom ruled by Aquaman.', 'Aquaman', 'Earth', 'More Fun Comics #73', '/images/atlantis.png'),
-('Batcave', 'Base', 'Batmans secret headquarters.', 'Batman', 'Gotham', 'Detective Comics #83', '/images/batcave.png');
 
+(
+'Gotham City',
+'City',
+'A dark and crime-filled city protected by Batman.',
+'Batman',
+'Earth',
+'Detective Comics #27',
+'/images/gotham.jpg'
+),
+
+(
+'Metropolis',
+'City',
+'The home city of Superman.',
+'Superman',
+'Earth',
+'Action Comics #1',
+'/images/metropolis.jpg'
+),
+
+(
+'Themyscira',
+'Island',
+'Hidden homeland of the Amazons.',
+'Wonder Woman',
+'Earth',
+'All Star Comics #8',
+'/images/themyscira.jpg'
+),
+
+(
+'Atlantis',
+'Kingdom',
+'An underwater kingdom ruled by Aquaman.',
+'Aquaman',
+'Earth',
+'More Fun Comics #73',
+'/images/atlantis.jpg'
+),
+
+(
+'Batcave',
+'Base',
+'Batmans secret headquarters.',
+'Batman',
+'Gotham',
+'Detective Comics #83',
+'/images/batcave.jpg'
+);
 
 INSERT INTO favorites (user_id, location_id)
 VALUES
