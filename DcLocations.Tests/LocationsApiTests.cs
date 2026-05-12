@@ -1,45 +1,40 @@
+using Xunit;
 using System.Net;
-using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
 
-namespace DcLocations.Tests
+namespace DcLocations.Tests;
+
+public class LocationsApiTests :
+    IClassFixture<WebApplicationFactory<Program>>
 {
-    public class LocationsApiTests :
-        IClassFixture<WebApplicationFactory<Program>>
+    private readonly HttpClient _client;
+
+    public LocationsApiTests(WebApplicationFactory<Program> factory)
     {
-        private readonly HttpClient _client;
+        _client = factory.CreateClient();
+    }
 
-        public LocationsApiTests(
-            WebApplicationFactory<Program> factory
-        )
-        {
-            _client = factory.CreateClient();
-        }
+    [Fact]
+    public async Task GetLocations_ReturnsSuccessStatus()
+    {
+        var response =
+            await _client.GetAsync("/api/locations");
 
-        [Fact]
-        public async Task GetLocations_ReturnsSuccessStatus()
-        {
-            var response =
-                await _client.GetAsync("/api/locations");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 
-            response.StatusCode
-                .Should()
-                .Be(HttpStatusCode.OK);
-        }
+    [Fact]
+    public async Task GetLocations_ReturnsLocationData()
+    {
+        var response =
+            await _client.GetAsync("/api/locations");
 
-        [Fact]
-        public async Task GetLocations_ReturnsLocationData()
-        {
-            var locations =
-                await _client.GetFromJsonAsync<List<object>>(
-                    "/api/locations"
-                );
+        response.EnsureSuccessStatusCode();
 
-            locations.Should().NotBeNull();
+        var content =
+            await response.Content.ReadAsStringAsync();
 
-            locations.Count.Should().BeGreaterThan(0);
-        }
+        content.Should().Contain("Gotham");
     }
 }
