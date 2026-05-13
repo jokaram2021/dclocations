@@ -3,6 +3,7 @@ using DcLocations.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
+using System.Security.Claims;
 
 namespace DcLocations.Api.Controllers
 {
@@ -18,66 +19,54 @@ namespace DcLocations.Api.Controllers
             _database = database;
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetFavorites(int userId)
+        [HttpGet]
+        public async Task<IActionResult> GetFavorites()
         {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    error = "Invalid user token"
+                });
+            }
+
             try
             {
-                using var connection =
-                    _database.CreateConnection();
+                using var connection = _database.CreateConnection();
 
                 await connection.OpenAsync();
 
                 var query = @"
-                    SELECT l.*
+                    SELECT
+                        l.id,
+                        l.name,
+                        l.category,
+                        l.description,
+                        l.associated_hero,
+                        l.universe_region,
+                        l.first_appearance,
+                        l.image_url,
+                        l.wiki_url
                     FROM favorites f
                     JOIN locations l
                         ON f.location_id = l.id
                     WHERE f.user_id = @userId
+                    ORDER BY l.name;
                 ";
 
-                using var command =
-                    new MySqlCommand(query, connection);
+                using var command = new MySqlCommand(query, connection);
 
-                command.Parameters.AddWithValue(
-                    "@userId",
-                    userId
-                );
+                command.Parameters.AddWithValue("@userId", userId.Value);
 
-                using var reader =
-                    await command.ExecuteReaderAsync();
+                using var reader = await command.ExecuteReaderAsync();
 
-                var favorites =
-                    new List<Location>();
+                var favorites = new List<Location>();
 
                 while (await reader.ReadAsync())
                 {
-                    favorites.Add(new Location
-                    {
-                        Id =
-                            reader.GetInt32("id"),
-
-                        Name =
-                            reader.GetString("name"),
-
-                        Category =
-                            reader.GetString("category"),
-
-                        Description =
-                            reader.GetString("description"),
-
-                        AssociatedHero =
-                            reader.GetString("associated_hero"),
-
-                        UniverseRegion =
-                            reader.GetString("universe_region"),
-
-                        FirstAppearance =
-                            reader.GetString("first_appearance"),
-
-                        ImageUrl =
-                            reader.GetString("image_url")
-                    });
+                    favorites.Add(MapLocation(reader));
                 }
 
                 return Ok(favorites);
@@ -93,36 +82,43 @@ namespace DcLocations.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddFavorite(
-            [FromBody] Favorite favorite
-        )
+        public async Task<IActionResult> AddFavorite([FromBody] FavoriteRequest favorite)
         {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    error = "Invalid user token"
+                });
+            }
+
+            if (favorite.LocationId <= 0)
+            {
+                return BadRequest(new
+                {
+                    error = "A valid locationId is required"
+                });
+            }
+
             try
             {
-                using var connection =
-                    _database.CreateConnection();
+                using var connection = _database.CreateConnection();
 
                 await connection.OpenAsync();
 
                 var query = @"
-                    INSERT INTO favorites
+                    INSERT IGNORE INTO favorites
                     (user_id, location_id)
                     VALUES
-                    (@userId, @locationId)
+                    (@userId, @locationId);
                 ";
 
-                using var command =
-                    new MySqlCommand(query, connection);
+                using var command = new MySqlCommand(query, connection);
 
-                command.Parameters.AddWithValue(
-                    "@userId",
-                    favorite.UserId
-                );
-
-                command.Parameters.AddWithValue(
-                    "@locationId",
-                    favorite.LocationId
-                );
+                command.Parameters.AddWithValue("@userId", userId.Value);
+                command.Parameters.AddWithValue("@locationId", favorite.LocationId);
 
                 await command.ExecuteNonQueryAsync();
 
@@ -141,37 +137,35 @@ namespace DcLocations.Api.Controllers
             }
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> RemoveFavorite(
-            int userId,
-            int locationId
-        )
+        [HttpDelete("{locationId}")]
+        public async Task<IActionResult> RemoveFavorite(int locationId)
         {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    error = "Invalid user token"
+                });
+            }
+
             try
             {
-                using var connection =
-                    _database.CreateConnection();
+                using var connection = _database.CreateConnection();
 
                 await connection.OpenAsync();
 
                 var query = @"
                     DELETE FROM favorites
                     WHERE user_id = @userId
-                    AND location_id = @locationId
+                    AND location_id = @locationId;
                 ";
 
-                using var command =
-                    new MySqlCommand(query, connection);
+                using var command = new MySqlCommand(query, connection);
 
-                command.Parameters.AddWithValue(
-                    "@userId",
-                    userId
-                );
-
-                command.Parameters.AddWithValue(
-                    "@locationId",
-                    locationId
-                );
+                command.Parameters.AddWithValue("@userId", userId.Value);
+                command.Parameters.AddWithValue("@locationId", locationId);
 
                 await command.ExecuteNonQueryAsync();
 
@@ -189,12 +183,62 @@ namespace DcLocations.Api.Controllers
                 });
             }
         }
+
+        private int? GetCurrentUserId()
+        {
+            var userIdValue =
+                User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (int.TryParse(userIdValue, out var userId))
+            {
+                return userId;
+            }
+
+            return null;
+        }
+
+        private static Location MapLocation(MySqlDataReader reader)
+        {
+            return new Location
+            {
+                Id = reader.GetInt32("id"),
+
+                Name = reader.GetString("name"),
+
+                Category = reader.GetString("category"),
+
+                Description = reader.GetString("description"),
+
+                AssociatedHero =
+                    reader.IsDBNull(reader.GetOrdinal("associated_hero"))
+                        ? null
+                        : reader.GetString("associated_hero"),
+
+                UniverseRegion =
+                    reader.IsDBNull(reader.GetOrdinal("universe_region"))
+                        ? null
+                        : reader.GetString("universe_region"),
+
+                FirstAppearance =
+                    reader.IsDBNull(reader.GetOrdinal("first_appearance"))
+                        ? null
+                        : reader.GetString("first_appearance"),
+
+                ImageUrl =
+                    reader.IsDBNull(reader.GetOrdinal("image_url"))
+                        ? null
+                        : reader.GetString("image_url"),
+
+                WikiUrl =
+                    reader.IsDBNull(reader.GetOrdinal("wiki_url"))
+                        ? null
+                        : reader.GetString("wiki_url")
+            };
+        }
     }
 
-    public class Favorite
+    public class FavoriteRequest
     {
-        public int UserId { get; set; }
-
         public int LocationId { get; set; }
     }
 }

@@ -1,13 +1,10 @@
-
 CREATE DATABASE IF NOT EXISTS dc_universe_locations;
-USE dc_universe_locations;
 
+USE dc_universe_locations;
 
 DROP TABLE IF EXISTS favorites;
 DROP TABLE IF EXISTS locations;
 DROP TABLE IF EXISTS users;
-
-
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -18,9 +15,6 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
-
 CREATE TABLE locations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -29,11 +23,12 @@ CREATE TABLE locations (
     associated_hero VARCHAR(100),
     universe_region VARCHAR(100),
     first_appearance VARCHAR(100),
-    image_url VARCHAR(255),
+    image_url VARCHAR(500),
+    wiki_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE favorites (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,147 +36,201 @@ CREATE TABLE favorites (
     location_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    -- Foreign Keys
     CONSTRAINT fk_favorites_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
         ON DELETE CASCADE,
 
     CONSTRAINT fk_favorites_location
-        FOREIGN KEY (location_id) REFERENCES locations(id)
+        FOREIGN KEY (location_id)
+        REFERENCES locations(id)
         ON DELETE CASCADE,
 
- 
-    CONSTRAINT uq_user_location UNIQUE (user_id, location_id)
+    CONSTRAINT uq_user_location
+        UNIQUE (user_id, location_id)
 );
 
-
-
-
-INSERT INTO users (username, email, password_hash, role)
+INSERT INTO users
+(
+    username,
+    email,
+    password_hash,
+    role
+)
 VALUES
-('admin', 'admin@dc.com', 'password123', 'Admin'),
-('batfan', 'batfan@dc.com', 'password123', 'User');
-
+(
+    'admin',
+    'admin@dc.com',
+    'EF92B778BAFE771E89245B89ECBC08A44A4E166C06659911881F383D4473E94F',
+    'Admin'
+),
+(
+    'batfan',
+    'batfan@dc.com',
+    'EF92B778BAFE771E89245B89ECBC08A44A4E166C06659911881F383D4473E94F',
+    'User'
+),
+(
+    'supergirl',
+    'supergirl@dc.com',
+    'EF92B778BAFE771E89245B89ECBC08A44A4E166C06659911881F383D4473E94F',
+    'User'
+),
+(
+    'flashfan',
+    'flashfan@dc.com',
+    'EF92B778BAFE771E89245B89ECBC08A44A4E166C06659911881F383D4473E94F',
+    'User'
+);
 
 INSERT INTO locations
-(name, category, description, associated_hero, universe_region, first_appearance, image_url)
+(
+    name,
+    category,
+    description,
+    associated_hero,
+    universe_region,
+    first_appearance,
+    image_url,
+    wiki_url
+)
 VALUES
-
 (
-'Gotham City',
-'City',
-'A dark and crime-filled city protected by Batman.',
-'Batman',
-'Earth',
-'Detective Comics #27',
-'/images/gotham.jpg'
+    'Gotham City',
+    'City',
+    'A dark and crime-filled city protected by Batman.',
+    'Batman',
+    'Earth',
+    'Detective Comics #27',
+    '',
+    'https://dc.fandom.com/wiki/Gotham_City'
 ),
-
 (
-'Metropolis',
-'City',
-'The home city of Superman.',
-'Superman',
-'Earth',
-'Action Comics #1',
-'/images/metropolis.jpg'
+    'Metropolis',
+    'City',
+    'The futuristic home city of Superman.',
+    'Superman',
+    'Earth',
+    'Action Comics #1',
+    '',
+    'https://dc.fandom.com/wiki/Metropolis'
 ),
-
 (
-'Themyscira',
-'Island',
-'Hidden homeland of the Amazons.',
-'Wonder Woman',
-'Earth',
-'All Star Comics #8',
-'/images/themyscira.jpg'
+    'Themyscira',
+    'Island',
+    'Hidden homeland of the Amazons and Wonder Woman.',
+    'Wonder Woman',
+    'Earth',
+    'All Star Comics #8',
+    '',
+    'https://dc.fandom.com/wiki/Themyscira'
 ),
-
 (
-'Atlantis',
-'Kingdom',
-'An underwater kingdom ruled by Aquaman.',
-'Aquaman',
-'Earth',
-'More Fun Comics #73',
-'/images/atlantis.jpg'
+    'Atlantis',
+    'Kingdom',
+    'The underwater kingdom ruled by Aquaman.',
+    'Aquaman',
+    'Earth',
+    'More Fun Comics #73',
+    '',
+    'https://dc.fandom.com/wiki/Atlantis'
 ),
-
 (
-'Batcave',
-'Base',
-'Batmans secret headquarters.',
-'Batman',
-'Gotham',
-'Detective Comics #83',
-'/images/batcave.jpg'
+    'Batcave',
+    'Base',
+    'Batmans secret underground headquarters.',
+    'Batman',
+    'Gotham',
+    'Detective Comics #83',
+    '',
+    'https://dc.fandom.com/wiki/Batcave'
+),
+(
+    'Central City',
+    'City',
+    'The fast-moving home city of The Flash.',
+    'Flash',
+    'Earth',
+    'Flash Comics #1',
+    '',
+    'https://dc.fandom.com/wiki/Central_City'
+),
+(
+    'Star City',
+    'City',
+    'Modern city protected by Green Arrow.',
+    'Green Arrow',
+    'Earth',
+    'More Fun Comics #73',
+    '',
+    'https://dc.fandom.com/wiki/Star_City'
+),
+(
+    'Smallville',
+    'Town',
+    'The peaceful hometown of Clark Kent.',
+    'Superman',
+    'Kansas',
+    'Superboy #2',
+    '',
+    'https://dc.fandom.com/wiki/Smallville'
+),
+(
+    'Hall of Justice',
+    'Headquarters',
+    'Main headquarters of the Justice League.',
+    'Justice League',
+    'Earth',
+    'Super Friends',
+    '',
+    'https://dc.fandom.com/wiki/Hall_of_Justice'
+),
+(
+    'Arkham Asylum',
+    'Institution',
+    'High security psychiatric hospital for Gotham criminals.',
+    'Batman',
+    'Gotham',
+    'Batman #258',
+    '',
+    'https://dc.fandom.com/wiki/Arkham_Asylum'
+),
+(
+    'Oa',
+    'Planet',
+    'Homeworld of the Green Lantern Corps.',
+    'Green Lantern',
+    'Space Sector 0',
+    'Showcase #22',
+    '',
+    'https://dc.fandom.com/wiki/Oa'
+),
+(
+    'Fortress of Solitude',
+    'Base',
+    'Supermans private Arctic sanctuary.',
+    'Superman',
+    'Arctic',
+    'Action Comics #241',
+    '',
+    'https://dc.fandom.com/wiki/Fortress_of_Solitude'
 );
 
-INSERT INTO favorites (user_id, location_id)
+INSERT INTO favorites
+(
+    user_id,
+    location_id
+)
 VALUES
-(2, 1),
-(2, 5);
-
-
--- EXAMPLE QUERIES
-
-
-
--- GET ALL LOCATIONS
-
--- SELECT * FROM locations;
-
-
--- GET LOCATION BY ID
-
--- SELECT * FROM locations WHERE id = 1;
-
-
--- SEARCH LOCATIONS
-
--- SELECT * FROM locations
--- WHERE name LIKE '%gotham%';
-
-
--- FILTER BY CATEGORY
-
--- SELECT * FROM locations
--- WHERE category = 'City';
-
-
--- GET USER FAVORITES
-
--- SELECT l.*
--- FROM favorites f
--- JOIN locations l ON f.location_id = l.id
--- WHERE f.user_id = 2;
-
-
--- ADD FAVORITE
-
--- INSERT INTO favorites (user_id, location_id)
--- VALUES (2, 3);
-
-
-
--- DELETE FROM favorites
--- WHERE user_id = 2 AND location_id = 3;
-
-
--- CREATE NEW LOCATION
-
--- INSERT INTO locations
--- (name, category, description, associated_hero, universe_region, first_appearance, image_url)
--- VALUES
--- ('Central City', 'City', 'Home of the Flash.', 'Flash', 'Earth', 'Flash Comics #1', '/images/central.png');
-
--- UPDATE LOCATION
-
--- UPDATE locations
--- SET description = 'Updated description'
--- WHERE id = 1;
-
--- DELETE LOCATION
-
--- DELETE FROM locations
--- WHERE id = 5;
+(
+    2,
+    1
+),
+(
+    2,
+    5
+),
+(
+    3,
+    3
+);

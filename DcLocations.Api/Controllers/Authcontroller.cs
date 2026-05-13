@@ -1,10 +1,11 @@
 using DcLocations.Api.Data;
 using DcLocations.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using Microsoft.IdentityModel.Tokens;
+using MySqlConnector;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DcLocations.Api.Controllers
@@ -14,7 +15,6 @@ namespace DcLocations.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly DatabaseConnection _database;
-
         private readonly IConfiguration _configuration;
 
         public AuthController(
@@ -23,13 +23,20 @@ namespace DcLocations.Api.Controllers
         )
         {
             _database = database;
-
             _configuration = configuration;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(User user)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    error = "Invalid registration data"
+                });
+            }
+
             try
             {
                 using var connection =
@@ -37,32 +44,65 @@ namespace DcLocations.Api.Controllers
 
                 await connection.OpenAsync();
 
-                var query = @"
-                    INSERT INTO users
-                    (username, email, password_hash, role)
-                    VALUES
-                    (@username, @email, @password, 'User')
+                var checkQuery = @"
+                    SELECT COUNT(*)
+                    FROM users
+                    WHERE username = @username
+                    OR email = @email;
                 ";
 
-                using var command =
-                    new MySqlCommand(query, connection);
+                using var checkCommand =
+                    new MySqlCommand(checkQuery, connection);
 
-                command.Parameters.AddWithValue(
+                checkCommand.Parameters.AddWithValue(
                     "@username",
                     user.Username
                 );
 
-                command.Parameters.AddWithValue(
+                checkCommand.Parameters.AddWithValue(
                     "@email",
                     user.Email
                 );
 
-                command.Parameters.AddWithValue(
-                    "@password",
-                    user.Password
+                var existingCount =
+                    Convert.ToInt32(
+                        await checkCommand.ExecuteScalarAsync()
+                    );
+
+                if (existingCount > 0)
+                {
+                    return BadRequest(new
+                    {
+                        error = "Username or email already exists"
+                    });
+                }
+
+                var insertQuery = @"
+                    INSERT INTO users
+                    (username, email, password_hash, role)
+                    VALUES
+                    (@username, @email, @passwordHash, 'User');
+                ";
+
+                using var insertCommand =
+                    new MySqlCommand(insertQuery, connection);
+
+                insertCommand.Parameters.AddWithValue(
+                    "@username",
+                    user.Username
                 );
 
-                await command.ExecuteNonQueryAsync();
+                insertCommand.Parameters.AddWithValue(
+                    "@email",
+                    user.Email
+                );
+
+                insertCommand.Parameters.AddWithValue(
+                    "@passwordHash",
+                    HashPassword(user.Password)
+                );
+
+                await insertCommand.ExecuteNonQueryAsync();
 
                 return Ok(new
                 {
@@ -82,6 +122,23 @@ namespace DcLocations.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(User user)
         {
+            if (string.IsNullOrWhiteSpace(user.Email)
+                && string.IsNullOrWhiteSpace(user.Username))
+            {
+                return BadRequest(new
+                {
+                    error = "Email or username is required"
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                return BadRequest(new
+                {
+                    error = "Password is required"
+                });
+            }
+
             try
             {
                 using var connection =
@@ -90,44 +147,81 @@ namespace DcLocations.Api.Controllers
                 await connection.OpenAsync();
 
                 var query = @"
-                    SELECT *
+                    SELECT
+                        id,
+                        username,
+                        email,
+                        password_hash,
+                        role
                     FROM users
-                    WHERE email = @email
-                    AND password_hash = @password
+                    WHERE email = @login
+                    OR username = @login
+                    LIMIT 1;
                 ";
 
                 using var command =
                     new MySqlCommand(query, connection);
 
-                command.Parameters.AddWithValue(
-                    "@email",
-                    user.Email
-                );
+                var loginValue =
+                    string.IsNullOrWhiteSpace(user.Email)
+                        ? user.Username
+                        : user.Email;
 
                 command.Parameters.AddWithValue(
-                    "@password",
-                    user.Password
+                    "@login",
+                    loginValue
                 );
 
                 using var reader =
                     await command.ExecuteReaderAsync();
 
-                if (await reader.ReadAsync())
+                if (!await reader.ReadAsync())
                 {
-                    var token =
-                        GenerateJwtToken(user.Email!);
-
-                    return Ok(new
+                    return Unauthorized(new
                     {
-                        message = "Login successful",
-                        token = token,
-                        email = user.Email
+                        error = "Invalid credentials"
                     });
                 }
 
-                return Unauthorized(new
+                var passwordHash =
+                    reader.GetString("password_hash");
+
+                if (passwordHash != HashPassword(user.Password))
                 {
-                    error = "Invalid credentials"
+                    return Unauthorized(new
+                    {
+                        error = "Invalid credentials"
+                    });
+                }
+
+                var userId =
+                    reader.GetInt32("id");
+
+                var username =
+                    reader.GetString("username");
+
+                var email =
+                    reader.GetString("email");
+
+                var role =
+                    reader.GetString("role");
+
+                var token =
+                    GenerateJwtToken(
+                        userId,
+                        username,
+                        email,
+                        role
+                    );
+
+                return Ok(new
+                {
+                    message = "Login successful",
+                    userId = userId,
+                    username = username,
+                    email = email,
+                    role = role,
+                    token = token
                 });
             }
             catch (Exception ex)
@@ -140,18 +234,41 @@ namespace DcLocations.Api.Controllers
             }
         }
 
-        private string GenerateJwtToken(string email)
+        private string GenerateJwtToken(
+            int userId,
+            string username,
+            string email,
+            string role
+        )
         {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Email, email)
-            };
+            var claims =
+                new[]
+                {
+                    new Claim(
+                        ClaimTypes.NameIdentifier,
+                        userId.ToString()
+                    ),
+                    new Claim(
+                        ClaimTypes.Name,
+                        username
+                    ),
+                    new Claim(
+                        ClaimTypes.Email,
+                        email
+                    ),
+                    new Claim(
+                        ClaimTypes.Role,
+                        role
+                    )
+                };
+
+            var jwtKey =
+                _configuration["Jwt:Key"]
+                ?? "THIS_IS_MY_SUPER_SECRET_DC_LOCATIONS_KEY_2026";
 
             var key =
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(
-                        _configuration["Jwt:Key"]!
-                    )
+                    Encoding.UTF8.GetBytes(jwtKey)
                 );
 
             var credentials =
@@ -160,16 +277,27 @@ namespace DcLocations.Api.Controllers
                     SecurityAlgorithms.HmacSha256
                 );
 
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(2),
-                signingCredentials: credentials
-            );
+            var token =
+                new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims: claims,
+                    expires: DateTime.Now.AddHours(2),
+                    signingCredentials: credentials
+                );
 
             return new JwtSecurityTokenHandler()
                 .WriteToken(token);
+        }
+
+        public static string HashPassword(string password)
+        {
+            var bytes =
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(password)
+                );
+
+            return Convert.ToHexString(bytes);
         }
     }
 }

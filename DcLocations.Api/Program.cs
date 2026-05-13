@@ -1,24 +1,15 @@
 using DcLocations.Api.Data;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
 using Microsoft.IdentityModel.Tokens;
-
 using System.Text;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
 builder.Services.AddControllers();
-
-
 
 builder.Services.AddEndpointsApiExplorer();
 
-
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
@@ -34,20 +25,14 @@ builder.Services.AddCors(options =>
     );
 });
 
-
-
 builder.Services.AddSingleton<DatabaseConnection>();
-
-
 
 var jwtKey =
     builder.Configuration["Jwt:Key"]
-    ?? "SuperSecretDevelopmentKey12345";
+    ?? "THIS_IS_MY_SUPER_SECRET_DC_LOCATIONS_KEY_2026";
 
 var key =
     Encoding.UTF8.GetBytes(jwtKey);
-
-
 
 builder.Services
     .AddAuthentication(
@@ -71,35 +56,27 @@ builder.Services
             };
     });
 
-
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseSwagger();
 
+app.UseSwaggerUI();
 
-app.UseCors("AllowAll");
-
-
+app.UseDefaultFiles();
 
 app.UseStaticFiles();
 
-
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 
-
-
 app.UseAuthorization();
-
-
 
 app.MapControllers();
 
-
-
 app.Run();
-
-
 
 public partial class Program
 {

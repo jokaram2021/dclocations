@@ -9,9 +9,10 @@ namespace DcLocations.Api.Data
         public DatabaseConnection(IConfiguration configuration)
         {
             _connectionString =
-                configuration.GetConnectionString(
-                    "DefaultConnection"
-                )!;
+                configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException(
+                    "DefaultConnection is missing from configuration."
+                );
         }
 
         public MySqlConnection CreateConnection()
