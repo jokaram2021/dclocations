@@ -32,5 +32,10 @@ namespace DcLocations.Api.Models
 
         [StringLength(500)]
         public string? WikiUrl { get; set; }
+
+        [StringLength(100)]
+        public string? PokemonName { get; set; }
+
+        public int ViewCount { get; set; }
     }
 }

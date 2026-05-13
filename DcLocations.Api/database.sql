@@ -25,6 +25,8 @@ CREATE TABLE locations (
     first_appearance VARCHAR(100),
     image_url VARCHAR(500),
     wiki_url VARCHAR(500),
+    pokemon_name VARCHAR(100),
+    view_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP
@@ -92,7 +94,9 @@ INSERT INTO locations
     universe_region,
     first_appearance,
     image_url,
-    wiki_url
+    wiki_url,
+    pokemon_name,
+    view_count
 )
 VALUES
 (
@@ -103,7 +107,9 @@ VALUES
     'Earth',
     'Detective Comics #27',
     '',
-    'https://dc.fandom.com/wiki/Gotham_City'
+    'https://dc.fandom.com/wiki/Gotham_City',
+    'zubat',
+    0
 ),
 (
     'Metropolis',
@@ -113,7 +119,9 @@ VALUES
     'Earth',
     'Action Comics #1',
     '',
-    'https://dc.fandom.com/wiki/Metropolis'
+    'https://dc.fandom.com/wiki/Metropolis',
+    'pikachu',
+    0
 ),
 (
     'Themyscira',
@@ -123,7 +131,9 @@ VALUES
     'Earth',
     'All Star Comics #8',
     '',
-    'https://dc.fandom.com/wiki/Themyscira'
+    'https://dc.fandom.com/wiki/Themyscira',
+    'nidoqueen',
+    0
 ),
 (
     'Atlantis',
@@ -133,7 +143,9 @@ VALUES
     'Earth',
     'More Fun Comics #73',
     '',
-    'https://dc.fandom.com/wiki/Atlantis'
+    'https://dc.fandom.com/wiki/Atlantis',
+    'squirtle',
+    0
 ),
 (
     'Batcave',
@@ -143,7 +155,9 @@ VALUES
     'Gotham',
     'Detective Comics #83',
     '',
-    'https://dc.fandom.com/wiki/Batcave'
+    'https://dc.fandom.com/wiki/Batcave',
+    'golbat',
+    0
 ),
 (
     'Central City',
@@ -153,7 +167,9 @@ VALUES
     'Earth',
     'Flash Comics #1',
     '',
-    'https://dc.fandom.com/wiki/Central_City'
+    'https://dc.fandom.com/wiki/Central_City',
+    'jolteon',
+    0
 ),
 (
     'Star City',
@@ -163,7 +179,9 @@ VALUES
     'Earth',
     'More Fun Comics #73',
     '',
-    'https://dc.fandom.com/wiki/Star_City'
+    'https://dc.fandom.com/wiki/Star_City',
+    'scyther',
+    0
 ),
 (
     'Smallville',
@@ -173,7 +191,9 @@ VALUES
     'Kansas',
     'Superboy #2',
     '',
-    'https://dc.fandom.com/wiki/Smallville'
+    'https://dc.fandom.com/wiki/Smallville',
+    'eevee',
+    0
 ),
 (
     'Hall of Justice',
@@ -183,7 +203,9 @@ VALUES
     'Earth',
     'Super Friends',
     '',
-    'https://dc.fandom.com/wiki/Hall_of_Justice'
+    'https://dc.fandom.com/wiki/Hall_of_Justice',
+    'dragonite',
+    0
 ),
 (
     'Arkham Asylum',
@@ -193,7 +215,9 @@ VALUES
     'Gotham',
     'Batman #258',
     '',
-    'https://dc.fandom.com/wiki/Arkham_Asylum'
+    'https://dc.fandom.com/wiki/Arkham_Asylum',
+    'haunter',
+    0
 ),
 (
     'Oa',
@@ -203,7 +227,9 @@ VALUES
     'Space Sector 0',
     'Showcase #22',
     '',
-    'https://dc.fandom.com/wiki/Oa'
+    'https://dc.fandom.com/wiki/Oa',
+    'alakazam',
+    0
 ),
 (
     'Fortress of Solitude',
@@ -213,7 +239,9 @@ VALUES
     'Arctic',
     'Action Comics #241',
     '',
-    'https://dc.fandom.com/wiki/Fortress_of_Solitude'
+    'https://dc.fandom.com/wiki/Fortress_of_Solitude',
+    'articuno',
+    0
 );
 
 INSERT INTO favorites

@@ -75,6 +75,8 @@
     </main>
 
     <script>
+        let currentLocationId = null;
+
         function getUser() {
             return JSON.parse(
                 localStorage.getItem("dcUser") || "null"
@@ -131,6 +133,8 @@
             const id =
                 params.get("id");
 
+            currentLocationId = id;
+
             const container =
                 document.getElementById("detailsContainer");
 
@@ -176,6 +180,13 @@
                                 <p class="lead mt-3">
                                     ${location.description}
                                 </p>
+
+                                <div
+                                    class="alert alert-secondary mt-4"
+                                    id="pokemonMatchBox"
+                                >
+                                    Loading DC Location Energy Match...
+                                </div>
 
                                 <button
                                     class="btn btn-gold me-2 mt-3"
@@ -239,10 +250,17 @@
                                         Learn more about ${location.name}
                                     </a>
                                 </p>
+
+                                <p>
+                                    <strong>Energy Match:</strong><br>
+                                    ${location.pokemonName || "pikachu"}
+                                </p>
                             </aside>
                         </div>
                     </div>
                 `;
+
+                loadPokemonMatch(id);
             }
             catch (error) {
                 console.error(error);
@@ -251,6 +269,58 @@
                     `<div class="alert alert-danger">
                         Unable to load this location.
                     </div>`;
+            }
+        }
+
+        async function loadPokemonMatch(locationId) {
+            const box =
+                document.getElementById("pokemonMatchBox");
+
+            try {
+                const response =
+                    await fetch(
+                        `/api/locations/${locationId}/pokemon-match`
+                    );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+                    box.className =
+                        "alert alert-danger mt-4";
+
+                    box.innerHTML =
+                        `
+                            <strong>Energy Match Unavailable</strong><br>
+                            ${data.error || "The match data could not be loaded."}
+                        `;
+
+                    return;
+                }
+
+                box.className =
+                    "alert alert-success mt-4";
+
+                box.innerHTML =
+                    `
+                        <strong>DC Location Energy Match</strong><br>
+                        This location is matched with
+                        <strong>${data.pokemonName}</strong>.<br>
+                        <strong>Type(s):</strong>
+                        ${data.types.join(", ")}
+                    `;
+            }
+            catch (error) {
+                console.error(error);
+
+                box.className =
+                    "alert alert-danger mt-4";
+
+                box.innerHTML =
+                    `
+                        <strong>Energy Match Unavailable</strong><br>
+                        Match data could not be loaded right now.
+                    `;
             }
         }
 

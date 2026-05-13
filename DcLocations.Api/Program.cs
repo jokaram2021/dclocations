@@ -27,6 +27,19 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<DatabaseConnection>();
 
+builder.Services.AddHttpClient(
+    "PokemonApi",
+    client =>
+    {
+        var baseUrl =
+            builder.Configuration["PokemonApi:BaseUrl"]
+            ?? "http://host.docker.internal:8080";
+
+        client.BaseAddress =
+            new Uri(baseUrl);
+    }
+);
+
 var jwtKey =
     builder.Configuration["Jwt:Key"]
     ?? "THIS_IS_MY_SUPER_SECRET_DC_LOCATIONS_KEY_2026";
