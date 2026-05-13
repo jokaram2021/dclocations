@@ -1,33 +1,47 @@
-API Function Specs
+
+## Overview
 
 
-
- Scope
-
+The API handles:
 
 - User registration
 - User login
-- Location retrieval 
-- Favorites management
+- JWT bearer token authentication
+- Location retrieval
+- Featured locations
+- Location create, update, and delete actions for admins
+- Favorites management for logged-in users
+- External read-only Pokémon Type API integration
+- Swagger API documentation
 
- Excluded
-- Password reset
-- Email verification
-- External APIs
-- Real time updates
+The API is built with ASP.NET Core Web API and uses a MySQL database running in a Docker container.
 
 ---
 
-authentication
+## API Scope
 
-The API will use token based authentication.
+### Included
 
-1. User submits credentials to login endpoint
-2. API validates credentials
-3. API returns a token
-4. Client includes token in future requests
+- User registration
+- User login
+- JWT token generation
+- Location retrieval
+- Featured location retrieval
+- Location detail retrieval
+- Location view tracking
+- Admin location creation
+- Admin location editing
+- Admin location deletion
+- Favorites retrieval
+- Add favorite
+- Remove favorite
+- External Pokémon Type API call for Energy Match
+- Swagger documentation
 
-if unauthorized access
-- Requests without valid token return error
-- Admin only endpoints require admin role
 
+
+---
+
+## Base URL
+
+When running locally with Docker, the API is available at http://localhost:5153
